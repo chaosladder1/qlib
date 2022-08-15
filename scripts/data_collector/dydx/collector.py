@@ -33,19 +33,19 @@ def get_date_set(timeinterval=1000):
         timeinterval: the number of days of ticker data to download
     """
 
-periods = int(timeinterval/100)
-dates = []
-for i in range(periods):
-  if i == 0:
-  dates.append(datetime.today().date())
-new_date = datetime.today().date() - timedelta(days=100)
+    periods = int(timeinterval/100)
+    dates = []
+    for i in range(periods):
+      if i == 0:
+      dates.append(datetime.today().date())
+    new_date = datetime.today().date() - timedelta(days=100)
 
-else:
-  new_date = new_date - timedelta(days=100)
+    else:
+      new_date = new_date - timedelta(days=100)
 
-dates.append(new_date)
+    dates.append(new_date)
 
-return dates
+    return dates
 
 
 
@@ -56,19 +56,19 @@ def get_active_dydx():
         crypto symbols in given exchanges list of coingecko
     """
 
-client = Client(
-  host='https://api.dydx.exchange'
-)
+    client = Client(
+      host='https://api.dydx.exchange'
+    )
 
-try:
-  markets = client.public.get_markets()
-market_df = pd.DataFrame(markets.data['markets']).transpose()
-market_list = market_df[market_df['status']=='ONLINE']['market'].tolist()
+    try:
+      markets = client.public.get_markets()
+    market_df = pd.DataFrame(markets.data['markets']).transpose()
+    market_list = market_df[market_df['status']=='ONLINE']['market'].tolist()
 
-except Exception as e:
-  logger.warning(f"request error: {e}")
-raise
-return market_list
+    except Exception as e:
+      logger.warning(f"request error: {e}")
+    raise
+    return market_list
 
 
 
@@ -123,24 +123,24 @@ super(CryptoCollector, self).__init__(
 self.init_datetime()
 
 def init_datetime(self):
-  if self.interval == self.INTERVAL_1min:
-  self.start_datetime = max(self.start_datetime, self.DEFAULT_START_DATETIME_1MIN)
-elif self.interval == self.INTERVAL_1d:
-  pass
-else:
-  raise ValueError(f"interval error: {self.interval}")
+    if self.interval == self.INTERVAL_1min:
+    self.start_datetime = max(self.start_datetime, self.DEFAULT_START_DATETIME_1MIN)
+  elif self.interval == self.INTERVAL_1d:
+    pass
+  else:
+    raise ValueError(f"interval error: {self.interval}")
 
-self.start_datetime = self.convert_datetime(self.start_datetime, self._timezone)
-self.end_datetime = self.convert_datetime(self.end_datetime, self._timezone)
+  self.start_datetime = self.convert_datetime(self.start_datetime, self._timezone)
+  self.end_datetime = self.convert_datetime(self.end_datetime, self._timezone)
 
 @staticmethod
 def convert_datetime(dt: [pd.Timestamp, datetime.date, str], timezone):
   try:
   dt = pd.Timestamp(dt, tz=timezone).timestamp()
-dt = pd.Timestamp(dt, tz=tzlocal(), unit="s")
-except ValueError as e:
-  pass
-return dt
+  dt = pd.Timestamp(dt, tz=tzlocal(), unit="s")
+  except ValueError as e:
+    pass
+  return dt
 
 @property
 @abc.abstractmethod
@@ -188,10 +188,10 @@ else:
 
 class CryptoCollector1d(CryptoCollector, ABC):
   def get_instrument_list(self):
-  logger.info("get coingecko crypto symbols......")
-symbols = get_active_dydx()
-logger.info(f"get {len(symbols)} symbols.")
-return symbols
+    logger.info("get coingecko crypto symbols......")
+    symbols = get_active_dydx()
+    logger.info(f"get {len(symbols)} symbols.")
+    return symbols
 
 def normalize_symbol(self, symbol):
   return symbol
@@ -212,28 +212,28 @@ def normalize_crypto(
   symbol_field_name: str = "market",
 ):
   if df.empty:
-  return df
-df = df.copy()
-df.set_index(date_field_name, inplace=True)
-df.index = pd.to_datetime(df.index)
-df = df[~df.index.duplicated(keep="first")]
-if calendar_list is not None:
-  df = df.reindex(
-    pd.DataFrame(index=calendar_list)
-    .loc[
-      pd.Timestamp(df.index.min()).date() : pd.Timestamp(df.index.max()).date()
-      + pd.Timedelta(hours=23, minutes=59)
-    ]
-    .index
-  )
-df.sort_index(inplace=True)
+    return df
+  df = df.copy()
+  df.set_index(date_field_name, inplace=True)
+  df.index = pd.to_datetime(df.index)
+  df = df[~df.index.duplicated(keep="first")]
+  if calendar_list is not None:
+    df = df.reindex(
+      pd.DataFrame(index=calendar_list)
+      .loc[
+        pd.Timestamp(df.index.min()).date() : pd.Timestamp(df.index.max()).date()
+        + pd.Timedelta(hours=23, minutes=59)
+      ]
+      .index
+    )
+  df.sort_index(inplace=True)
 
-df.index.names = [date_field_name]
-return df.reset_index()
+  df.index.names = [date_field_name]
+  return df.reset_index()
 
 def normalize(self, df: pd.DataFrame) -> pd.DataFrame:
   df = self.normalize_crypto(df, self._calendar_list, self._date_field_name, self._symbol_field_name)
-return df
+  return df
 
 
 class CryptoNormalize1d(CryptoNormalize):
