@@ -1,0 +1,9 @@
+loguru
+fire
+requests
+numpy
+pandas
+tqdm
+lxml
+dydx-v3-python
+web3
